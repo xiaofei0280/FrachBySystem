@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <!--导入外部文件-->
+     <context:property-placeholder location="classpath:db.properties"></context:property-placeholder>
+
+    <!--连接池-->
+    <bean  id="druid" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url"  value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="1"/>
+        <property name="minIdle" value="1"/>
+        <property name="maxActive" value="3"/>
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="3000"/>
+    </bean>
+
+
+    <!--sqlSessionFactory-->
+    <bean id="sqlSessionFactory01" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 连接池 -->
+        <property name="dataSource" ref="druid"></property>
+        <!-- mapper文件
+          如果和dao接口在同包且同名，则如下注入可以省略
+      -->
+       <!--<property name="mapperLocations" value="com/vince/dao/*.xml"></property>-->
+        <!-- 别名 -->
+         <property name="typeAliasesPackage" value="com.qf.pojo"></property>
+        <!--插件-->
+        <property name="plugins">
+            <list>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <!--<property name="properties">
+                        <props>
+                            <prop key="reasonable">true</prop>
+                        </props>
+                    </property>-->
+                    <property name="properties">
+                        <value>
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </list>
+        </property>
+
+
+    </bean>
+
+
+    <!--扫描器-->
+    <!-- 扫描所有mapper，为每个dao定制实现类   sqlSession.getMapper(UserDAO.class)
+         DAO实现的对象会 纳入工厂，并且beanID=DAO的首字母小写接口类名=“userDAO”
+         1> DAO接口
+         2> DAO映射文件
+         3> SqlSession
+    -->
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--Dao接口的位置-->
+        <property name="basePackage" value="com.qf.dao"></property>
+
+        <!-- 如果当前工厂中 只有一个SqlSessionFactory,则此项注入可以省略 -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory01"></property>
+    </bean>
+
+
+
+    <!-- 告知Spring
+     唯独不扫描@Controller注解的类 -->
+    <context:component-scan base-package="com.qf" use-default-filters="true">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+
+
+    <!--引入shiro文件-->
+    <import resource="classpath:shiro-spring.xml"></import>
+
+</beans>

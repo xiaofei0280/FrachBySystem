@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+    <!-- 整合mybaits，事务控制等 配置不变 -->
+    <!-- 添加配置 -->
+    <!-- shiro -->
+    <!-- 声明realm -->
+
+
+    <bean id="myRealm" class="com.qf.realm.MyRealm">
+        <property name="userService" ref="userServiceImpl"/>
+        <property name="roleService" ref="roleServiceImpl"/>
+        <property name="permissionService" ref="permissionServiceImpl"/>
+
+         <!--密码比对器-->
+        <property name="credentialsMatcher">
+        <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <property name="hashAlgorithmName" value="SHA-256"/>
+        <!-- true means hex encoded, false means base64 encoded -->
+        <property name="storedCredentialsHexEncoded" value="false"/>
+        <property name="hashIterations" value="10000"/>
+        </bean>
+        </property>
+    </bean>
+
+
+
+    <!-- 声明SecurityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!--注册realm-->
+        <property name="realm" ref="myRealm"/>
+
+    </bean>
+
+
+
+    <!-- 生产SpringShiroFilter
+         （ 持有shiro的过滤相关规则，可进行请求的过滤校验，校验请求是否合法 ）
+    -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <!--<property name="loginUrl" value="/user/login/page"/>-->
+        <!--<property name="unauthorizedUrl" value="/user/error"/>-->
+        <property name="filterChainDefinitions">
+            <value>
+                <!--/user/login/page = anon-->
+                <!--/user/query= authc,roles["student"]-->
+                <!--/user/delete=authc,perms["delete"]-->
+
+            </value>
+        </property>
+    </bean>
+
+
+
+
+    <!--引入redis文件-->
+
+
+</beans>
